@@ -1,5 +1,6 @@
-import { getAll } from '../services/storage.js';
+import { getAll, remove, getById } from '../services/storage.js';
 import { TIPOS, TEMAS, NIVELES } from '../data/options.js';
+import { showToast } from '../components/toast.js';
 
 export function getLabel(lista, value) {
   const item = lista.find((opt) => opt.value === value);
@@ -55,7 +56,10 @@ export function renderList(app) {
                   </div>
                   <div class="resource-footer">
                     <span class="resource-date">${fecha}</span>
-                    <a href="#/editar/${recurso.id}" class="btn btn-secondary">Editar</a>
+                    <div class="resource-actions">
+                      <a href="#/editar/${recurso.id}" class="btn btn-secondary">Editar</a>
+                      <button type="button" class="btn btn-danger" data-action="delete" data-id="${recurso.id}">Eliminar</button>
+                    </div>
                   </div>
                 </article>
               `;
@@ -73,4 +77,22 @@ export function renderList(app) {
       ${content}
     </div>
   `;
+
+  app.querySelectorAll('[data-action="delete"]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const id = button.dataset.id;
+      const confirmed = window.confirm('¿Estás seguro de que deseas eliminar este recurso?');
+      if (!confirmed) {
+        return;
+      }
+
+      const deleted = remove(id);
+      if (deleted && getById(id) === null) {
+        showToast('Recurso eliminado correctamente');
+        renderList(app);
+      } else {
+        showToast('Error: el recurso no se pudo eliminar o no existe', 'error');
+      }
+    });
+  });
 }
